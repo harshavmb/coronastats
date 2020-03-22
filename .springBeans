@@ -9,6 +9,7 @@
 	<configs>
 	</configs>
 	<autoconfigs>
+		<config>java:com.coronastats.model.consumingrestservice.ConsumeRapidApi</config>
 	</autoconfigs>
 	<configSets>
 	</configSets>
