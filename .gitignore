@@ -6,3 +6,4 @@ mvn*
 gradle*
 .mvn*
 build.gradle
+.spring*
