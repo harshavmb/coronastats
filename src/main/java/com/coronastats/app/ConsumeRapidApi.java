@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.coronastats.model.consumingrestservice;
+package com.coronastats.app;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

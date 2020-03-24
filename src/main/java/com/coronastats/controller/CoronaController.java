@@ -3,6 +3,8 @@ package com.coronastats.controller;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.coronastats.model.CoronaStats;
+import com.coronastats.model.CountryNinja;
+import com.coronastats.model.HistoricalCases;
 import com.coronastats.service.CoronaStatsService;
 
 import org.slf4j.Logger;
@@ -31,6 +33,21 @@ public class CoronaController {
 	@RequestMapping("/restcountry")
 	public CoronaStats byCountry(@RequestParam String country) throws Exception {
 		return coronaStatsService.runServiceByCountry(country).getBody();
+	}
+	
+	@RequestMapping("/ninjatest")
+	public CountryNinja[] ninjaAllCountries() throws Exception {
+		return coronaStatsService.runNinjaService();
+	}
+	
+	@RequestMapping("/ninjacountry")
+	public CountryNinja ninjaByCountry(@RequestParam String country) throws Exception {
+		return coronaStatsService.runNinjaServiceByCountry(country);
+	}
+	
+	@RequestMapping("/historicalninja")
+	public HistoricalCases historicalNinja() throws Exception {
+		return coronaStatsService.runHistoricalService();
 	}
 
 }
