@@ -5,6 +5,7 @@ package com.coronastats.model;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -25,6 +26,7 @@ public class Covid19Stats {
 	
 	private String country;
 	
+	@JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
 	private Date lastUpdate;
 	
 	private Double confirmed;

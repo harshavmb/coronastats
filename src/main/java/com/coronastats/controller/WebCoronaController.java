@@ -71,6 +71,11 @@ public class WebCoronaController {
 		//formatHistoricalData(model, coronaStatsService.runHistoricalService());
 		return "index";
 	}
+	
+	@GetMapping(value= {"/error","/404.html"})
+	public String error(Model model) throws Exception {
+		return "error";
+	}
 
 	private Model formatHistoricalData(Model model, Historical[] runHistoricalService) throws ParseException {
 		LinkedHashMap<String, Integer> finalMap = new LinkedHashMap<String, Integer>();
