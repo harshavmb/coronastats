@@ -61,8 +61,8 @@
 					aria-labelledby="headingPages" data-parent="#accordionSidebar">
 					<div class="bg-white py-2 collapse-inner rounded">
 						<h6 class="collapse-header">Other Pages:</h6>
-						<a class="collapse-item" href="login.html">About</a> <a
-							class="collapse-item" href="blank.html">Contact</a>
+						<a class="collapse-item" href="about">About</a> <a
+							class="collapse-item" href="contact">Contact</a>
 					</div>
 				</div></li>
 
@@ -150,7 +150,7 @@
 				<div class="container-fluid">
 					<!-- Page Heading -->
 					<h1 class="h3 mb-4 text-gray-800">
-						Corona Virus stats of <span th:text="${country}"></span>
+						Coronavirus stats of <span th:text="${country}"></span>
 					</h1>
 				</div>
 				<!-- Content Row -->
@@ -354,10 +354,14 @@
 
 	<!-- Bootstrap core JavaScript-->
 	<script>
-    var total = [[${total}]];
-    var deaths = [[${deaths}]];
-    var recovered = [[${recovered}]];
-  </script>
+      var total = [[${total}]];
+      var deaths = [[${deaths}]];
+      var recovered = [[${recovered}]];
+    </script>
+  
+    <script th:inline="javascript">
+       var historical = [[${historical}]];
+    </script>
 
 	<!-- Bootstrap core JavaScript-->
 	<script src="vendor/jquery/jquery.min.js"></script>

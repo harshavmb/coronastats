@@ -3,12 +3,19 @@
  */
 package com.coronastats.controller;
 
+import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +30,8 @@ import com.coronastats.model.CoronaStats;
 import com.coronastats.model.CountryNinja;
 import com.coronastats.model.Covid19Stats;
 import com.coronastats.model.CumulativeCases;
+import com.coronastats.model.Historical;
+import com.coronastats.model.HistoricalCases;
 import com.coronastats.service.CoronaStatsService;
 
 /**
@@ -37,21 +46,20 @@ public class WebCoronaController {
 
 	Set<String> countries = new HashSet<String>();
 
-	@GetMapping("/index")
+	@GetMapping(value= {"/rapidindex"})
 	public String greeting(Model model) throws Exception {
-		//formatResponseForAllCountries(model, coronaStatsService.runService());
+		// formatResponseForAllCountries(model, coronaStatsService.runService());
 		List<Covid19Stats> countriesData = new ArrayList<Covid19Stats>();
 		List<Covid19Stats> covid19Stats = coronaStatsService.runService().getBody().getData().getCovid19Stats();
 		Set<String> listAllCountries = listAllCountries(covid19Stats);
 		for (String s : listAllCountries) {
 			countriesData.add(formatResponseByCountry(covid19Stats, s));
 		}
-
 		setDataForIndex(model, countriesData);
 		return "index";
 	}
-	
-	@GetMapping("/ninjaindex")
+
+	@GetMapping(value= {"/","/index"})
 	public String index(Model model) throws Exception {
 		List<CountryNinja> countriesData = new ArrayList<CountryNinja>();
 		CountryNinja[] ninjaCountries = coronaStatsService.runNinjaService();
@@ -59,12 +67,48 @@ public class WebCoronaController {
 		for (String s : listAllNinjaCountries) {
 			countriesData.add(formatResponseByNinjaCountry(ninjaCountries, s));
 		}
-		
 		setDataForNinjaIndex(model, countriesData, coronaStatsService.runCumulativeService());
+		//formatHistoricalData(model, coronaStatsService.runHistoricalService());
 		return "index";
 	}
 
-	@RequestMapping("/")
+	private Model formatHistoricalData(Model model, Historical[] runHistoricalService) throws ParseException {
+		LinkedHashMap<String, Integer> finalMap = new LinkedHashMap<String, Integer>();
+		for (Historical h : runHistoricalService) {
+			int value = 0;
+			String key = "";
+			for (Map.Entry<String, Integer> item : h.getTimeline().getCases().getCaseFields().entrySet()) {
+				value = item.getValue()!= null ? value + item.getValue() : value;
+				key = item.getKey();
+			}
+			System.out.println(key);
+			finalMap.put(key, value);
+		}
+		model.addAttribute("historical", finalMap);
+		return model;
+	}
+
+	private Model formatHistoricalDataByCountry(Model model, HistoricalCases runHistoricalService)
+			throws ParseException {
+		Map<Date, Integer> intermediaryMap = new TreeMap<Date, Integer>();
+		LinkedHashMap<String, Integer> finalMap = new LinkedHashMap<String, Integer>();
+		for (Map.Entry<String, Integer> item : runHistoricalService.getTimeline().getCases().getCaseFields()
+				.entrySet()) {
+			DateFormat formatter = new SimpleDateFormat("M/dd/yy");
+			Date date = formatter.parse(item.getKey());
+			intermediaryMap.put(date, item.getValue());
+		}
+
+		for (Map.Entry<Date, Integer> item : intermediaryMap.entrySet()) {
+			DateFormat formatter = new SimpleDateFormat("EEE MMM dd hh:mm:ss zzz yyyy");
+			DateFormat formatter2 = new SimpleDateFormat("dd-MMM-yyyy");
+			Date date = formatter.parse(item.getKey().toString());
+			finalMap.put(formatter2.format(date), item.getValue());
+		}
+		model.addAttribute("historical", finalMap);
+		return model;
+	}
+
 	public String allCountries(Model model) throws Exception {
 		List<Covid19Stats> countriesData = new ArrayList<Covid19Stats>();
 		List<Covid19Stats> covid19Stats = coronaStatsService.runService().getBody().getData().getCovid19Stats();
@@ -78,35 +122,36 @@ public class WebCoronaController {
 		return "index";
 	}
 
-	@RequestMapping("/country")
+	@RequestMapping("/rapidcountry")
 	public String byCountry(Model model, @RequestParam String country) throws Exception {
 		formatResponse(model, coronaStatsService.runServiceByCountry(country), country);
 		return "country";
 	}
-	
+
 	@RequestMapping("/countries")
 	public String byNinjaCountry(Model model, @RequestParam String country) throws Exception {
 		formatNinjaResponse(model, coronaStatsService.runNinjaServiceByCountry(country), country);
+		formatHistoricalDataByCountry(model, coronaStatsService.runHistoricalServiceByCountry(country));
 		return "country";
 	}
 
-	@RequestMapping("/tables")
+	@RequestMapping("/rapidtables")
 	public String byTable(Model model) throws Exception {
 		formatResponseForTables(model, coronaStatsService.runService());
 		return "tables";
 	}
-	
-	@RequestMapping("/ninjatables")
+
+	@RequestMapping("/tables")
 	public String byNinjaTable(Model model) throws Exception {
 		formatResponseForNinjaTables(model, coronaStatsService.runNinjaService());
 		return "ninjatables";
 	}
-	
+
 	@RequestMapping("/about")
 	public String about() throws Exception {
 		return "about";
 	}
-	
+
 	@RequestMapping("/contact")
 	public String contact() throws Exception {
 		return "contact";
@@ -132,7 +177,7 @@ public class WebCoronaController {
 		model.addAttribute("country", country);
 		return model;
 	}
-	
+
 	private Model formatNinjaResponse(Model model, CountryNinja ninjaCountry, String country) throws Exception {
 		model.addAttribute("total", ninjaCountry.getCases());
 		model.addAttribute("deaths", ninjaCountry.getDeaths());
@@ -160,7 +205,7 @@ public class WebCoronaController {
 		model.addAttribute("countriesData", countriesData);
 		return model;
 	}
-	
+
 	private Model formatResponseForNinjaTables(Model model, CountryNinja[] countries) throws Exception {
 		List<CountryNinja> countriesDataTable = new ArrayList<CountryNinja>();
 		for (CountryNinja c : countries) {
@@ -186,7 +231,7 @@ public class WebCoronaController {
 		}
 		return countries;
 	}
-	
+
 	private Set<String> listAllNinjaCountries(CountryNinja[] ninjaCountries) {
 		Set<String> ninjaCountries2 = new HashSet<String>();
 		for (CountryNinja c : ninjaCountries) {
@@ -199,17 +244,17 @@ public class WebCoronaController {
 		return covid19Stats.stream().sorted(Comparator.comparing(Covid19Stats::getConfirmed).reversed())
 				.collect(Collectors.toList());
 	}
-	
+
 	private List<CountryNinja> sortByNinjaConfirmed(List<CountryNinja> countriesData2) {
 		return countriesData2.stream().sorted(Comparator.comparing(CountryNinja::getCases).reversed())
 				.collect(Collectors.toList());
 	}
-	
+
 	private List<Covid19Stats> sortByFatalities(List<Covid19Stats> covid19Stats) {
 		return covid19Stats.stream().sorted(Comparator.comparing(Covid19Stats::getDeaths).reversed())
 				.collect(Collectors.toList());
 	}
-	
+
 	private List<CountryNinja> sortByNinjaFatalities(List<CountryNinja> countriesData2) {
 		return countriesData2.stream().sorted(Comparator.comparing(CountryNinja::getDeaths).reversed())
 				.collect(Collectors.toList());
@@ -233,8 +278,9 @@ public class WebCoronaController {
 		cs.setCountry(country);
 		return cs;
 	}
-	
-	private CountryNinja formatResponseByNinjaCountry(CountryNinja[] listAllNinjaCountries, String country) throws Exception {
+
+	private CountryNinja formatResponseByNinjaCountry(CountryNinja[] listAllNinjaCountries, String country)
+			throws Exception {
 		int total_confirmed = 0;
 		int total_deaths = 0;
 		int total_recoveries = 0;
@@ -275,20 +321,22 @@ public class WebCoronaController {
 				.map(Covid19Stats::getConfirmed).collect(Collectors.toList()));
 		model.addAttribute("worstFatalityCountries", sortByFatalities(countriesData2).subList(0, 5).stream()
 				.map(Covid19Stats::getCountry).collect(Collectors.toList()));
-		model.addAttribute("fatalities",sortByFatalities(countriesData2).subList(0, 5).stream()
+		model.addAttribute("fatalities", sortByFatalities(countriesData2).subList(0, 5).stream()
 				.map(Covid19Stats::getDeaths).collect(Collectors.toList()));
 		return model;
 
 	}
-	
-	private Model setDataForNinjaIndex(Model model, List<CountryNinja> countriesData2, CumulativeCases cumulativeCases) {
+
+	private Model setDataForNinjaIndex(Model model, List<CountryNinja> countriesData2,
+			CumulativeCases cumulativeCases) {
 
 		DecimalFormat df = new DecimalFormat("#.##");
 		model.addAttribute("total", cumulativeCases.getCases());
 		model.addAttribute("deaths", cumulativeCases.getDeaths());
 		model.addAttribute("recovered", cumulativeCases.getRecovered());
 		model.addAttribute("updated", cumulativeCases.getUpdated());
-		Double fatality_number = (Double.valueOf(cumulativeCases.getDeaths()) / Double.valueOf(cumulativeCases.getCases())) * 100;
+		Double fatality_number = (Double.valueOf(cumulativeCases.getDeaths())
+				/ Double.valueOf(cumulativeCases.getCases())) * 100;
 		model.addAttribute("fatality", df.format(fatality_number));
 		model.addAttribute("worstHitCountries", sortByNinjaConfirmed(countriesData2).subList(0, 10).stream()
 				.map(CountryNinja::getCountry).collect(Collectors.toList()));
@@ -296,11 +344,10 @@ public class WebCoronaController {
 				.map(CountryNinja::getCases).collect(Collectors.toList()));
 		model.addAttribute("worstFatalityCountries", sortByNinjaFatalities(countriesData2).subList(0, 5).stream()
 				.map(CountryNinja::getCountry).collect(Collectors.toList()));
-		model.addAttribute("fatalities",sortByNinjaFatalities(countriesData2).subList(0, 5).stream()
+		model.addAttribute("fatalities", sortByNinjaFatalities(countriesData2).subList(0, 5).stream()
 				.map(CountryNinja::getDeaths).collect(Collectors.toList()));
 		return model;
 
 	}
 
 }
-

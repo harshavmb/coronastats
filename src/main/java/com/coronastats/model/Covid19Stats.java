@@ -6,6 +6,7 @@ package com.coronastats.model;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -17,6 +18,7 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 @Setter
+@JsonInclude(JsonInclude.Include.NON_NULL) 
 public class Covid19Stats {
 	
 	private String province;

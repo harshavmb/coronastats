@@ -29,11 +29,12 @@ function number_format(number, decimals, dec_point, thousands_sep) {
 
 // Area Chart Example
 var ctx = document.getElementById("myAreaChart");
+console.log(historical);
 var myLineChart = new Chart(ctx, {
   type: 'line',
   data: {
     //labels: ["China", "Italy", "Spain", "Germany", "Iran", "US", "UK", "France", "SouthKorea", "Switzerland", "Netherlands", "Belgium"],
-	  labels: worstHitCountries,
+	  labels: Object.keys(historical),
     datasets: [{
       label: "Cases",
       lineTension: 0.3,
@@ -47,8 +48,9 @@ var myLineChart = new Chart(ctx, {
       pointHoverBorderColor: "rgba(78, 115, 223, 1)",
       pointHitRadius: 10,
       pointBorderWidth: 2,
-      data: [0, 5000, 10000, 20000, 30000, 40000, 50000, 70000, 80000, 90000, 100000, 150000, 200000],
-      //data: confirmedCases,
+      //data: [0, 5000, 10000, 20000, 30000, 40000, 50000, 70000, 80000, 90000, 100000, 150000, 200000],
+      //data: confirmedCases.reverse(),
+      data: Object.values(historical),
     }],
   },
   options: {
@@ -71,12 +73,12 @@ var myLineChart = new Chart(ctx, {
           drawBorder: false
         },
         ticks: {
-          maxTicksLimit: 7
+          maxTicksLimit: 10
         }
       }],
       yAxes: [{
         ticks: {
-          maxTicksLimit: 5,
+          maxTicksLimit: 10,
           padding: 10,
           // Include a dollar sign in the ticks
           callback: function(value, index, values) {

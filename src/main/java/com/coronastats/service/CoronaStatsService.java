@@ -19,6 +19,7 @@ import com.coronastats.app.ConsumeRapidApi;
 import com.coronastats.model.CoronaStats;
 import com.coronastats.model.CountryNinja;
 import com.coronastats.model.CumulativeCases;
+import com.coronastats.model.Historical;
 import com.coronastats.model.HistoricalCases;
 
 /**
@@ -117,9 +118,18 @@ public class CoronaStatsService {
 	}
 	
 	@GetMapping(produces = { "application/json" })
-	public HistoricalCases runHistoricalService() throws Exception {
+	public Historical[] runHistoricalService() throws Exception {
+		HttpEntity<Historical> requestEntity = new HttpEntity<Historical>(setHeadersForNinja());
+		Historical[] response = restTemplate.exchange(ninjaHost+"historical", HttpMethod.GET, requestEntity,
+				Historical[].class).getBody();
+		log.info(response.toString());
+		return response;
+	}
+	
+	@GetMapping(produces = { "application/json" })
+	public HistoricalCases runHistoricalServiceByCountry(String country) throws Exception {
 		HttpEntity<HistoricalCases> requestEntity = new HttpEntity<HistoricalCases>(setHeadersForNinja());
-		HistoricalCases response = restTemplate.exchange(ninjaHost+"historical/india", HttpMethod.GET, requestEntity,
+		HistoricalCases response = restTemplate.exchange(ninjaHost+"historical/"+country, HttpMethod.GET, requestEntity,
 				HistoricalCases.class).getBody();
 		log.info(response.toString());
 		return response;

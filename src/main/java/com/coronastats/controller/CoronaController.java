@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.coronastats.model.CoronaStats;
 import com.coronastats.model.CountryNinja;
-import com.coronastats.model.HistoricalCases;
+import com.coronastats.model.Historical;
 import com.coronastats.service.CoronaStatsService;
 
 import org.slf4j.Logger;
@@ -46,7 +46,7 @@ public class CoronaController {
 	}
 	
 	@RequestMapping("/historicalninja")
-	public HistoricalCases historicalNinja() throws Exception {
+	public Historical[] historicalNinja() throws Exception {
 		return coronaStatsService.runHistoricalService();
 	}
 
