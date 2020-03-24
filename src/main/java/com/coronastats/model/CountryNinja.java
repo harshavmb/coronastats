@@ -38,5 +38,7 @@ public class CountryNinja {
 	private int critical;
 	
 	private int casesPerOneMillion;
+	
+	private int deathsPerOneMillion;
 
 }

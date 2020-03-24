@@ -8,6 +8,8 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +49,7 @@ public class WebCoronaController {
 
 	Set<String> countries = new HashSet<String>();
 
-	@GetMapping(value= {"/rapidindex"})
+	@GetMapping(value = { "/rapidindex" })
 	public String greeting(Model model) throws Exception {
 		// formatResponseForAllCountries(model, coronaStatsService.runService());
 		List<Covid19Stats> countriesData = new ArrayList<Covid19Stats>();
@@ -59,7 +62,7 @@ public class WebCoronaController {
 		return "index";
 	}
 
-	@GetMapping(value= {"/","/index"})
+	@GetMapping(value = { "/", "/index" })
 	public String index(Model model) throws Exception {
 		List<CountryNinja> countriesData = new ArrayList<CountryNinja>();
 		CountryNinja[] ninjaCountries = coronaStatsService.runNinjaService();
@@ -68,26 +71,37 @@ public class WebCoronaController {
 			countriesData.add(formatResponseByNinjaCountry(ninjaCountries, s));
 		}
 		setDataForNinjaIndex(model, countriesData, coronaStatsService.runCumulativeService());
-		//formatHistoricalData(model, coronaStatsService.runHistoricalService());
+		formatHistoricalData(model, coronaStatsService.runHistoricalService());
 		return "index";
 	}
-	
-	@GetMapping(value= {"/error","/404.html"})
+
+	@GetMapping(value = { "/error", "/404.html" })
 	public String error(Model model) throws Exception {
 		return "error";
 	}
 
 	private Model formatHistoricalData(Model model, Historical[] runHistoricalService) throws ParseException {
 		LinkedHashMap<String, Integer> finalMap = new LinkedHashMap<String, Integer>();
-		for (Historical h : runHistoricalService) {
+		Map<Date, Integer> interMediaryMap = new TreeMap<Date, Integer>();
+		List<String> dateList = runHistoricalService[0].getTimeline().getCases().getCaseFields().keySet().stream()
+				.collect(Collectors.toList());
+		for (String d : dateList) {
 			int value = 0;
-			String key = "";
-			for (Map.Entry<String, Integer> item : h.getTimeline().getCases().getCaseFields().entrySet()) {
-				value = item.getValue()!= null ? value + item.getValue() : value;
-				key = item.getKey();
+			for (Historical h : runHistoricalService) {
+				if (h.getTimeline().getCases().getCaseFields().get(d) != null) {
+					value += h.getTimeline().getCases().getCaseFields().get(d);
+				}
 			}
-			System.out.println(key);
-			finalMap.put(key, value);
+			DateFormat formatter = new SimpleDateFormat("M/dd/yy");
+			Date date = formatter.parse(d);
+			interMediaryMap.put(date, value);
+		}
+
+		for (Map.Entry<Date, Integer> item : interMediaryMap.entrySet()) {
+			DateFormat formatter = new SimpleDateFormat("EEE MMM dd hh:mm:ss zzz yyyy");
+			DateFormat formatter2 = new SimpleDateFormat("dd-MMM-yyyy");
+			Date date = formatter.parse(item.getKey().toString());
+			finalMap.put(formatter2.format(date), item.getValue());
 		}
 		model.addAttribute("historical", finalMap);
 		return model;
@@ -184,13 +198,10 @@ public class WebCoronaController {
 	}
 
 	private Model formatNinjaResponse(Model model, CountryNinja ninjaCountry, String country) throws Exception {
-		model.addAttribute("total", ninjaCountry.getCases());
-		model.addAttribute("deaths", ninjaCountry.getDeaths());
-		model.addAttribute("recovered", ninjaCountry.getRecovered());
+		model.addAttribute("ninjaCountry", ninjaCountry);
 		DecimalFormat df = new DecimalFormat("#.##");
 		Double fatality_number = (Double.valueOf(ninjaCountry.getDeaths()) / ninjaCountry.getCases()) * 100;
 		model.addAttribute("fatality", df.format(fatality_number));
-		model.addAttribute("country", country);
 		return model;
 	}
 
