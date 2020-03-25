@@ -38,14 +38,17 @@ public class CoronaStatsService {
 	private final String host_key;
 	
 	private final String ninjaHost;
+	
+	private final String ninjaHostv2;
 
 	@Autowired
 	public CoronaStatsService(@Value("${rapidapi.url}") String url, @Value("${rapidapi.host}") String host,
-			@Value("${rapiapi.key}") String host_key,@Value("${ninja.api}") String ninjaHost) {
+			@Value("${rapiapi.key}") String host_key,@Value("${ninja.api}") String ninjaHost,@Value("${ninja.api.v2}") String ninjaHostv2) {
 		this.url = url;
 		this.host = host;
 		this.host_key = host_key;
 		this.ninjaHost = ninjaHost;
+		this.ninjaHostv2 = ninjaHostv2;
 	}
 	
 	private HttpHeaders setHeaders() {
@@ -120,7 +123,7 @@ public class CoronaStatsService {
 	@GetMapping(produces = { "application/json" })
 	public Historical[] runHistoricalService() throws Exception {
 		HttpEntity<Historical> requestEntity = new HttpEntity<Historical>(setHeadersForNinja());
-		Historical[] response = restTemplate.exchange(ninjaHost+"historical", HttpMethod.GET, requestEntity,
+		Historical[] response = restTemplate.exchange(ninjaHostv2+"historical", HttpMethod.GET, requestEntity,
 				Historical[].class).getBody();
 		log.info(response.toString());
 		return response;
@@ -129,7 +132,7 @@ public class CoronaStatsService {
 	@GetMapping(produces = { "application/json" })
 	public HistoricalCases runHistoricalServiceByCountry(String country) throws Exception {
 		HttpEntity<HistoricalCases> requestEntity = new HttpEntity<HistoricalCases>(setHeadersForNinja());
-		HistoricalCases response = restTemplate.exchange(ninjaHost+"historical/"+country, HttpMethod.GET, requestEntity,
+		HistoricalCases response = restTemplate.exchange(ninjaHostv2+"historical/"+country, HttpMethod.GET, requestEntity,
 				HistoricalCases.class).getBody();
 		log.info(response.toString());
 		return response;
